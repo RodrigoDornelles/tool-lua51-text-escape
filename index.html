@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Safe Lua 5.1 Text Escape Converter</title>
+<style>
+  body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 1rem;
+    background: #f4f4f4;
+    display: flex;
+    justify-content: center;
+  }
+  .container {
+    max-width: 800px;
+    width: 100%;
+  }
+  h1 {
+    font-size: 1.8rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  p {
+    font-size: 1rem;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  textarea, pre {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem;
+    font-family: monospace;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+    background: white;
+  }
+  pre {
+    background: #222;
+    color: #0f0;
+    min-height: 4rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  button {
+    margin-top: 0.5rem;
+    padding: 0.5rem 0;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 6px;
+    border: 1px solid #000080;
+    background: #000080;
+    color: white;
+    transition: background 0.2s ease;
+    width: 100%;
+    text-align: center;
+    display: block;
+  }
+  button:hover {
+    background: #3366cc;
+    color: white;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Safe Lua 5.1 Text Escape Converter</h1>
+  <p>Convert any text (with optional <code>\xXX</code> escapes) into a Lua-safe string.<br>
+  (eg. Florianópolis → Florian\195\179polis)</p>
+  <textarea id="inputText" rows="5" placeholder="Eg. Florianópolis "></textarea>
+  <h2>Output:</h2>
+  <pre id="output"></pre>
+  <button id="copyBtn" title="Copy to clipboard">Copy</button>
+</div>
+
+<script>
+function parseEscapes(str) {
+  return str.replace(/\\x([0-9A-Fa-f]{2})/g, (_, hex) =>
+    String.fromCharCode(parseInt(hex, 16))
+  );
+}
+function toMixedEscapes(str) {
+  let bytes = new TextEncoder().encode(str);
+  return Array.from(bytes)
+    .map(b => (b >= 0x20 && b <= 0x7E) ? String.fromCharCode(b) : "\\" + b.toString().padStart(3, "0"))
+    .join("");
+}
+const input = document.getElementById("inputText");
+const output = document.getElementById("output");
+const copyBtn = document.getElementById("copyBtn");
+
+input.addEventListener("input", () => {
+  let parsed = parseEscapes(input.value);
+  output.textContent = toMixedEscapes(parsed);
+});
+
+copyBtn.addEventListener("click", () => {
+  if (!output.textContent) return;
+  navigator.clipboard.writeText(output.textContent).then(() => {
+    copyBtn.textContent = "Copied!";
+    setTimeout(() => copyBtn.textContent = "Copy", 1500);
+  });
+});
+</script>
+</body>
+</html>
